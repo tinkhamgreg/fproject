@@ -140,7 +140,19 @@ Now that we have our files set up, it's time to add our files to our local git r
 
 Which adds all of the files within this directory to the git blob.
 
-``
+`git commit -m "First commit, created README, CHANGELOG, Dockerfile, and run_test files."`
+
+This creates a commit of files that are now ready to be pushed. The -m flag allows you to enter a message.
+
+`git remote add origin https://github.com/tinkhamgreg/fproject.git`
+
+This takes our local github repository and tells github.com that the repository we created earlier is the origin repository for our local repository.
+
+`git push -u origin master`
+
+This pushes our local commit to the master branch on github.com because we are still on our master branch locally.
+
+If you go to your repository on cloud.docker.com you should see your Build in 'master" pending or starting.
 
 
 
