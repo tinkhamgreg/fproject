@@ -116,6 +116,7 @@ WORKDIR /src
 ~~~~
 to our Dockerfile. These commands in the Dockerfile will take a copy of a ubuntu image, COPY whatever is in our current directory to the source directory, and finally set our working directory to the source directory.
 
+Now we can setup our docker-compose.test.yml
 We will now setup our run_test.sh file.
 
 `touch run_test.sh`
