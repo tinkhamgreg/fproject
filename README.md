@@ -113,8 +113,6 @@ FROM ubuntu:xenial
 WORKDIR /src
 
 COPY . /src
-
-
 ~~~~
 to our Dockerfile. These commands in the Dockerfile will take a copy of a Ubuntu image, COPY whatever is in our current directory to the source directory, and finally set our working directory to the source directory.
 
@@ -134,6 +132,21 @@ echo "Hi"
 What these lines do is call bash from the shell script. The echo command will simply print out hi to the screen when executed. But, we need to make this shell script executable. To do this, run the command
 
 `chmod +x run_test.sh`
+
+
+The last file to update here is the docker-compose.test.yml file.
+
+In this file we will place
+
+~~~~
+sut:
+ build: .
+ command: ./run_test.sh
+~~~~
+
+This yml file acts as a way of listing out the tests which an automated docker build should run. In this file, we will be running our run_test.sh test.
+
+### Pushing our Github repository to Github and Docker Cloud.
 
 Next we will push our changes to our github repository.
 But first, we're going to set up our rules in our Docker cloud repository to build images from our Master git branch and our future git tags. To do this, we will have to create our docker cloud repository, syn our github repository with it, and then setup our build rule.
@@ -160,13 +173,133 @@ This pushes our local commit to the master branch on github.com because we are s
 
 If you go to your repository on cloud.docker.com you should see your Build in 'master" pending or starting. If you click on your build you can see the log output from docker cloud.
 
+If successfull, you will see a "success" build status.
+
+From now on, we will do all of our new work in a different branch. So, for this next step we will cut a branch called flask, which will end with us having a home page and ready to implement ansible and prometheus. To cut the branch we can run
+
+`git checkout -b "flask"`
+
+which will automatically put us on the flask branch that we created with the -b flag.
+
+At this stage, we need to make changing to some of our existing files. The first will be the Dockerfile. Our new Dockerfile will also have these commands after the `WORKDIR /src` command.
+
+~~~~
+RUN apt-get update -y
+RUN apt-get install -y python3 python3-pip python3-dev build-essential
+
+RUN pip3 install Flask
+COPY . /src
+EXPOSE 8080
+EXPOSE 8081
+
+~~~~
 
 
+What these new commands do is tell the Ubuntu image to update itself. The, to install python 3. After that pip3 will be installed. Finally, Flask will be installed using pip. We move the copy command so that everything is copied after we setup our environment. The expose commands expose the ports we will be using to publish the websites. 8080 will be used for the production site and 8081 will be used for the staging site.
 
-### Docker
-Creating the first
-### Flask
-one web page
+
+Next, we will make changes to our run_test.sh file. We will now run the tests
+
+~~~~
+echo "Running Flask Unit Tests"
+python3 fproject_test.py
+~~~~
+
+This will allow us to set up a page for specific tests in the fproject_test.py file that we will create next. To do this, use the touch command.
+
+`touch fproject_test.py`
+
+At this point we will also want to create the fproject.py file and our templates file using
+
+`touch fproject.py`
+`touch templates`
+
+
+We will make changes to the fproject.py file first. Open up the file using the in terminal nano text editor and we will enter the following lines of code:
+
+~~~~
+from flask import Flask, render_template
+app = Flask(__name__)
+
+@app.route('/')
+def run_flask():
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')
+~~~~
+
+What this code will do is import Flask from flask, and import a render_template module that will use special stying templates in our html files. Then, the code specifies the realtive directory "/" for the app. After that, the run_flask(): function returns our index.html page (the homepage). The if statement at the bottom turns on debugging and tells the operating system to listen to all public IP addresses.
+
+Now we can move onto editing the fproject_test.py file. In this file we will have
+
+~~~~
+import unittest
+
+import fproject
+
+
+class FlaskrTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.app = unh698.app.test_client()
+
+    def tearDown(self):
+         pass
+
+    def test_home_page(self):
+        # Render the / path of the website
+        rv = self.app.get('/')
+        # Check that the page contains the desired phrase
+        assert b'Continuous Development' in rv.data
+
+if __name__ == '__main__':
+    unittest.main()
+~~~~
+
+There is a lot here, but much like the other file we are importing the unittest module and fproject file, and creating a class with three functions. These three functions setup the test client, provide a tear down function, and test the home page. The home page is tested by asserting that the contents, in this case 'Looking At Liquidity' will appear on the page when published.
+
+Finally, we will add our template directory and include in it our home page html file. To do this, we use the commands
+
+`mkdir templates`
+
+`cd templates`
+
+`touch index.html`
+
+Inside of the index.html file we will place
+
+~~~~
+<!DOCTYPE html>
+<html>
+<head>
+	<h1>Continuous Development</h1>
+</head>
+<body>
+</body>
+</html>
+~~~~
+
+This places a basic html page inside of the file with a header reading "Continuous Development". This is what our assert function will find when it scans the page.
+
+
+We're now ready to test our changes on DockerCloud. But first, we must update our CHANGELOG, tag these new changes so DockerCloud will test them properly, and push our tags up to Github. So, now that we have added new functionality to our website we can update the changelog to 1.0.0. We will mark this new version with "Implemented flask, created home page."
+
+We can now add all the files to the git tree using `git add *` and then do our normal `git commit -m " "` command. Then, we will tag the commit by using:
+
+`git tag 1.0.1` Then we can push this tag by using
+
+`git push --tags origin flask`
+
+which pushes these tags to our flask branch on github.
+
+You should now see your new "1.0.0" tag building on DockerCloud. When successful, it will be time to merge this Flask branch into our master branch. This way, we can update our master branch with a version that we know has completed the necessary tests.
+
+
+### Creating A Pull request
+
+To do this, we will issue a pull request. On the github.com make your way to your repository's page. Then select the "tags" pane from the drop down menu, select your tag. On your tag's page click on the "new pull request button". 
+
 
 ### SSHing Into The Amazon Virtual Machine
 Our virtual machine has already been configured with git and ansible, as well as port 8080 and 8081 already open. So, in order to login to it we need two things, the IP address and the private key given.
