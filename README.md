@@ -285,7 +285,15 @@ This places a basic html page inside of the file with a header reading "Continuo
 
 We're now ready to test our changes on DockerCloud. But first, we must update our CHANGELOG, tag these new changes so DockerCloud will test them properly, and push our tags up to Github. So, now that we have added new functionality to our website we can update the changelog to 1.0.0. We will mark this new version with "Implemented flask, created home page."
 
-We can now add all the files to the git tree using `git add *` and then 
+We can now add all the files to the git tree using `git add *` and then do our normal `git commit -m " "` command. Then, we will tag the commit by using:
+
+`git tag 1.0.1` Then we can push this tag by using
+
+`git push --tags origin flask`
+
+which pushes these tags to our flask branch on github.
+
+You should now see your new "1.0.0" tag building on DockerCloud.
 ### SSHing Into The Amazon Virtual Machine
 Our virtual machine has already been configured with git and ansible, as well as port 8080 and 8081 already open. So, in order to login to it we need two things, the IP address and the private key given.
 
