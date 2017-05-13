@@ -6,7 +6,7 @@ import fproject
 class FlaskrTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.app = unh698.app.test_client()
+        self.app = fproject.app.test_client()
 
     def tearDown(self):
          pass
