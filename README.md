@@ -110,9 +110,11 @@ So, now we must add
 ~~~~
 FROM ubuntu:xenial
 
+WORKDIR /src
+
 COPY . /src
 
-WORKDIR /src
+
 ~~~~
 to our Dockerfile. These commands in the Dockerfile will take a copy of a Ubuntu image, COPY whatever is in our current directory to the source directory, and finally set our working directory to the source directory.
 
@@ -129,8 +131,11 @@ In our run_test.sh file we will place the two lines.
 echo "Hi"
 ~~~~
 
-What these lines do is call bash from the shell script. The echo command will simply print out hi to the screen when executed. Next we will push our changes to our github repository.
+What these lines do is call bash from the shell script. The echo command will simply print out hi to the screen when executed. But, we need to make this shell script executable. To do this, run the command
 
+`chmod +x run_test.sh`
+
+Next we will push our changes to our github repository.
 But first, we're going to set up our rules in our Docker cloud repository to build images from our Master git branch and our future git tags. To do this, we will have to create our docker cloud repository, syn our github repository with it, and then setup our build rule.
 
 To setup our Docker Cloud Repository, on the docker site click on the "+" sign at the top of the page. On that page, put in the repository name, a description, and then click on the github icon under build settings. Select your github name from the organization drop down, and then your repository (fproject in this case). Scroll down and you will see the "build rules" section. There is one already setup for Master Branch, so click on the blue add icon and under source type select "tag", source "/^[0-9.]+$/", and Docker tag "release-{sourceref}".When you complete this, on the next page you should see a "Github Ping" test with a check-mark if completed successfully. These build rules are automatically set to create these builds automatically when the commits are pushed to github.
@@ -153,7 +158,7 @@ This takes our local github repository and tells github.com that the repository 
 
 This pushes our local commit to the master branch on github.com because we are still on our master branch locally.
 
-If you go to your repository on cloud.docker.com you should see your Build in 'master" pending or starting.
+If you go to your repository on cloud.docker.com you should see your Build in 'master" pending or starting. If you click on your build you can see the log output from docker cloud.
 
 
 
