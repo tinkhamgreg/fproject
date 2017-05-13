@@ -293,7 +293,14 @@ We can now add all the files to the git tree using `git add *` and then do our n
 
 which pushes these tags to our flask branch on github.
 
-You should now see your new "1.0.0" tag building on DockerCloud.
+You should now see your new "1.0.0" tag building on DockerCloud. When successful, it will be time to merge this Flask branch into our master branch. This way, we can update our master branch with a version that we know has completed the necessary tests.
+
+
+### Creating A Pull request
+
+To do this, we will issue a pull request. On the github.com make your way to your repository's page. Then select the "tags" pane from the drop down menu, select your tag. On your tag's page click on the "new pull request button". 
+
+
 ### SSHing Into The Amazon Virtual Machine
 Our virtual machine has already been configured with git and ansible, as well as port 8080 and 8081 already open. So, in order to login to it we need two things, the IP address and the private key given.
 
