@@ -8,5 +8,9 @@ setup_metrics(app)
 def run_flask():
     return render_template('index.html')
 
+@app.route('/cloud')
+def cloud():
+    return render_template('cloud.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

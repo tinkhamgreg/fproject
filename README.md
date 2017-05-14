@@ -17,6 +17,8 @@ This process flow will allow the end state of the tutorial to show how the stagi
 
 
 
+
+
 # Tools We Will Use
 
 ## Git
@@ -473,6 +475,7 @@ This main.yml file acts as a listing of what files to include in the docker inst
 
 
 * service.yml
+
 ~~~~
 ---
 # This should ensure that the docker service is running.
@@ -562,7 +565,8 @@ First, we will make an addition to our DockerFile. At the end of the file after 
 
 `RUN pip3 install prometheus_client`
 
-Now that Docker will install the prometheus_client, we need to create a prometheus_metrics.py file to create a metrics page within Flask. Within this page we will have the contents:
+We must also remove the EXPOSE commands as ansible will be handling that functionality.
+Now that Docker will install the prometheus_client, we need to create a prometheus_metrics.py file to create a metrics page within Flask.  Within this page we will have the contents:
 
 ~~~~
 import time
@@ -608,11 +612,26 @@ def setup_metrics(app):
         return Response(generate_latest(), mimetype="text/plain")
 ~~~~
 
+What this python file does is import all of the relevant packages for prometheus, as well as some for calculating metrics such as time and Histogram. Then, it sets up a histogram and counter for the site statistics. Then, the setup_metrics function takes in an app, in this case fproject, and sets a time that can be referenced when pages are viewed. A counter is then incremented. Finally, the @app.route('/metrics') gives a url for the metrics page and the metrics() function displays the latest responses.
+
+We also need to make changes to our fproject.py file so that our website renders the metrics page.
+
+Inside of the fproject.py file we will add:
+
+~~~~
+from prometheus_metrics import setup_metrics
+setup_metrics(app)
+~~~~
+underneath the `app = Flask(__name__)` line. This tells python to import the metrics and to run our application through the setup_metrics.
+
+We are now ready to test these changes in docker cloud. Once again we will add this files to the git tree, commit them, tag the commit, and push the tag to Github.com.
 
 
+## Hosting Our First Webserver on AWS
 
+We now will take our website and place it on our AWS virtual machine. But first, we must login to the machine.
 
-### SSHing Into The Amazon Virtual Machine
+## SSHing Into The Amazon Virtual Machine
 Our virtual machine has already been configured with git and ansible, as well as port 8080 and 8081 already open. So, in order to login to it we need two things, the IP address and the private key given.
 
 The private key file **should not** be placed inside of the git repository. It should remain in a directory on your local machine that you can easily locate. In the same directory (such as Documents) is a good place. To ssh into the machine we would run the following command where gtinkham.key is the name of the key file, gtinkham the username, and the numbers following the @ symbol the ip address.
@@ -625,12 +644,87 @@ The private key file **should not** be placed inside of the git repository. It s
 
 in your terminal. You have successfully logged into the machine.
 
-### Setting up our virtual machine with Ansible
+## Setting Up Our Virtual Machine
+
+### Cloning Github Repository
+
+The first thing we need to do is clone our github repository onto this machine. We can use the command:
+
+`git clone https://github.com/tinkhamgreg/fproject.git`
+
+to clone the fproject repository.
+
+We will at this stage also cut a github branch for our initial AWS work in case we run into errors.
+
+`git checkout -b aws`
+
+### Setting Up Ansible
+
+Now, we need to change some of the images for our staging and production environment. We want to use the two latest for production and staging, and set them up to feed our newest iterations as we go. If you remember, these will be inside of the ansible -> deploy-website-staging and deploy-website-production files. Update these so that our newest revision is in staging and our second newest is in production. Now, we will run the ansible configuration file. To do this, use the command:
+
+`ansible-playbook configure-host.yml -v --extra-vars "student_username=xxxxxxx"`
+
+where xxxxxxx should be replaced with the username you logged into the AWS with.
+
+You will see lots of output on the screen, hopefully in yellow and green. If you see an error in red you should be able to look through the text and see where the error occurred, whether this be in the handler or tasks. Now, we are ready to deploy our two ansible playbooks, production and staging. To do this, we will go to our ansible directory and run:
+
+`ansible-playbook deploy-website-production.yml -v`
+
+You will see similar output to running the configure playbook. But, on the last task you will see in the output the url of our production webserver. http://[your IP address]:8080 You can now go there in your intnernet browswer and see the site. Now, because we did not add the Prometheus integration into this image, we will not see the /metrics page. So,now we will run our staging playbook.
+
+`ansible-playbook deploy-website-staging.yml -v`
+
+You will see a very similar output but with the port number 8081 that we placed inside the ansible playbook.
+
+## * If You Need To Make Changes To The Project From The Virtual Machine
+
+If for some reason you meet an error while working on the AWS instance, you can also send your changes on the AWS branch to github and go through the process of testing them and then merging them into master. While creating this, I had to add a line to the fproject.py code. So, I made the changes, updated the image that would be used in staging (3.0.2 instead of 3.0.1), and pushed the changes to be tested in docker cloud.
+
+In the future, we will create a separate branch for every page that we add. If you do this, you will have to reconfigure git with your email and username like we did on the local machine. Then, simply add, commit, tag, and push the changes.
+
+You should now be able to go to your url such as `http://52.53.194.21:8081/metrics`
+
+You have now completed the first run of the project. From here, we will update our home page, add two new sub-pages, and simulate the development environment that will be used for continuation.
+
+# Adding Another Page and Adding More Content.
+
+Now that we have our site setup for development, we can add another page and make some stylistic changes to the html.
+
+To do this, we will work from our local machine. So, we need to checkout the master branch locally and pull down our latest version of master.
+
+We are now going to add a second page, as well as create some style changes to our home page.
+
+### Adding style
+
+To add style, we are going to use the bootstrap framework for our css files. This will allow us to use some style sheets we like without rewriting the book on style sheets. We will use three directories from this template. From the bootstrap website we can download Bootstrap Here [http://getbootstrap.com/getting-started/#download](http://getbootstrap.com/getting-started/#download) Once downloaded, extract the files and go into the first directory, you'll then see directories for css, text, and js. We will place these a newly added style directory in our home directory of our project.
+
+Following directions from [https://v4-alpha.getbootstrap.com/components/navbar/](https://v4-alpha.getbootstrap.com/components/navbar/) we can see how to easily implement a navbar is. In our navbar we will have three pages. Home, Using The Cloud, and Best Practices.
+
+Inside of our index.html file you will notice that we include the css files in a different way than normal. The Jinja templates uses a built in function to set the relative url of files. So in this case we use:
+
+`<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">`
+
+for our stylesheet. We can now add some other information to our home page such as pictures and text.
+
+### Adding Our Second page
+
+We Are now ready to create our second page. In the templates directory create another html file, in this case cloud.html.
+
+The cloud.html file should include the same html as the index.html file but changes to the title as well as content in the <body>.
+
+Now that we have made our second page we will need to create another test for it in fproject_test.py. This will be exactly the same as the one for index.html but needs to look for text on the cloud.html page.
+
+We also need to add another function to render our cloud page inside of the fproject.py file. This way our test will actually have a page to look at.
+
+### Putting Our Second Page and Style Changes on AWS
+Now, we should make changes to our ansible deployment playbooks now, so that they are ready to pull the newer image as soon as we update our github repository on the machine.
+
+So, now our staging image will be 3.0.3 and the production image will be 3.0.2. We can now add all of our new files to the git tree, commit them, tag them, and push the commits for testing.
 
 
 
-# Second Run
-subpage <- production
+
+
 
 # Third Run
 sub page

@@ -5,7 +5,7 @@
   become: true
   vars:
     fproject_environment: staging
-    fproject_image_version: release-3.0.1
+    fproject_image_version: release-3.0.4
     fproject_host_port: 8081
     fproject_container_port: 5000
   roles:
