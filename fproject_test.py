@@ -17,5 +17,11 @@ class FlaskrTestCase(unittest.TestCase):
         # Check that the page contains the desired phrase
         assert b'Continuous Development' in rv.data
 
+    def test_home_page(self):
+        # Render the / path of the website
+        rv = self.app.get('/cloud')
+        # Check that the page contains the desired phrase
+        assert b'The Use of The Cloud In Continuous Development' in rv.data
+
 if __name__ == '__main__':
     unittest.main()
