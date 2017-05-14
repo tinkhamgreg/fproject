@@ -1,0 +1,7 @@
+---
+# This playbook configures the local machine to run docker.
+- name: Install the community edition of docker
+  hosts: localhost
+  become: true
+  roles:
+    - docker

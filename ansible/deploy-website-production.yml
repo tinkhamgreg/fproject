@@ -1,0 +1,12 @@
+---
+# Runs the production website playbook.
+- name: Deploy the production version of your website based on the previous tag of your docker-cloud-test image
+  hosts: localhost
+  become: true
+  vars:
+    fproject_environment: production
+    fproject_image_version: release-1.0.6
+    fproject_host_port: 8080
+    fproject_container_port: 5000
+  roles:
+    - fproject
