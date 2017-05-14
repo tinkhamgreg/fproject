@@ -157,7 +157,7 @@ Now that we have our files set up, it's time to add our files to our local git r
 
 `git add *`
 
-Which adds all of the files within this directory to the git blob.
+Which makes the files within this directory ready for a commit.
 
 `git commit -m "First commit, created README, CHANGELOG, Dockerfile, and run_test files."`
 
@@ -174,6 +174,9 @@ This pushes our local commit to the master branch on github.com because we are s
 If you go to your repository on cloud.docker.com you should see your Build in 'master" pending or starting. If you click on your build you can see the log output from docker cloud.
 
 If successfull, you will see a "success" build status.
+
+
+### Implementing Flask
 
 From now on, we will do all of our new work in a different branch. So, for this next step we will cut a branch called flask, which will end with us having a home page and ready to implement ansible and prometheus. To cut the branch we can run
 
@@ -259,6 +262,8 @@ if __name__ == '__main__':
 
 There is a lot here, but much like the other file we are importing the unittest module and fproject file, and creating a class with three functions. These three functions setup the test client, provide a tear down function, and test the home page. The home page is tested by asserting that the contents, in this case 'Looking At Liquidity' will appear on the page when published.
 
+
+### Adding HTML Files
 Finally, we will add our template directory and include in it our home page html file. To do this, we use the commands
 
 `mkdir templates`
@@ -298,7 +303,214 @@ You should now see your new "1.0.0" tag building on DockerCloud. When successful
 
 ### Creating A Pull request
 
-To do this, we will issue a pull request. On the github.com make your way to your repository's page. Then select the "tags" pane from the drop down menu, select your tag. On your tag's page click on the "new pull request button". 
+To do this, we will issue a pull request. On the github.com make your way to your repository's page. Then select the "tags" pane from the drop down menu, select the flask branch. Click on the green Create new pull request" button. You will be taken to a screen where you can make comments to the pull request's thread. After this, the pull request will remain open and our tests will run in Docker Cloud. Once successfully completed we can now merge the pull request into master. To do this, click on the "Merge pull request" button on the bottom of the pull request's page. Remember, you can access your pull requests any time by clicking on the Pull Requests tab on your Github page.
+
+Now, we should update our local master branch on our machine. To do this use the commands:
+
+`git checkout master`
+
+`git pull origin master`
+
+This tells git to switch to our master branch, and then pull down the master branch we just merged with the flask branch on Github.com.
+
+### Ansible Creation
+
+We will now move onto our next phase, which is using ansible to setup our environments automatically. This will
+be a large part of the repository, and there is a lot of information contained within the ansible directory we will create. So, let's start with that by cutting a new ansible branch, then creating the ansible directory
+
+Within the ansible directory we will now create four files and one directory.
+
+* ansible.cfg
+* configure-host.yml
+* deploy-website-production.yml
+* deploy-website-staging.yml
+* DIRECTORY roles
+
+We will now go through the list and go through what goes into each file and why.
+
+* ansible.configured
+
+~~~~
+[localhost]
+~~~~
+
+This tells ansible to use the localhost IP address, 127.0.0.1.
+
+* configure-host.yml
+
+~~~~
+---
+# This playbook configures the local machine to run docker.
+
+- name: Install the community edition of docker
+  hosts: localhost
+  become: true
+  roles:
+    - docker
+~~~~
+As told in our introduction, these yml files are what make up ansible playbooks. Going through the file, you can see the playbook sets up the host, localhost, which is our machine, to run the docker role that we will setup after setting these playbook files.
+
+* deploy-website-production.yml
+
+~~~~
+---
+---
+# Runs the production website playbook.
+- name: Deploy the production version of your website based on the previous tag$
+  hosts: localhost
+  become: true
+  vars:
+    fproject_environment: production
+    fproject_image_version: release-1.0.6
+    fproject_host_port: 8080
+    fproject_container_port: 5000
+  roles:
+    - fproject
+~~~~
+
+There is a lot going on in this playbook but the concept remains the same. We tell ansible to use the fproject role that we will create and to use these variables underneath "vars:". These variables include the environment to use, production, the image version (which we update to 2.0.1), which will match our git tag, the host_port, or the port of the virtual machine we will use, and the container port, 5000, which is the port number that docker will use to connect with the virtual machine. The release numbers are not relevant now as we are not getting ready to use our metrics page and home page for deployment.
+
+
+* deploy-website-production.yml
+
+~~~
+---
+---
+#Playbook for staging website.
+- name: Deploy the staging version of your website based on the newest tag of y$
+  hosts: localhost
+  become: true
+  vars:
+    fproject_environment: staging
+    fproject_image_version: release-1.0.5
+    fproject_host_port: 8081
+    fproject_container_port: 5000
+  roles:
+    - fproject
+~~~~
+
+This playbook does the same as the production playbook but for the staging site. You'll notice this is operating on the 8081 port and a working release behind (1.0.4).
+
+
+### Editing Our roles
+
+We will now work on our roles. In the roles directory we will need two sub directory roles. One for fproject and one for docker. We will start by creating two sub directories inside of the docker directory. These will be named "handlers" and "tasks". Inside of the handlers directory we will have a main.yml file. In this file we will have
+
+~~~~
+---
+# Run apt-get update
+- name: apt-get update
+  apt:
+    update_cache: yes
+    cache_valid_time: 1800
+~~~~
+
+All this file does is tell docker to get update just like in our Dockerfile.
+
+Now, back in our tasks directory under the docker directory we will need four files.
+
+* install.yml
+
+~~~~
+---
+# Install the docker service
+- name: install docker dependencies
+  apt:
+    pkg: '{{ item }}'
+    update_cache: yes
+    cache_valid_time: 1800
+  with_items:
+    - apt-transport-https
+    - ca-certificates  
+    - curl
+    - software-properties-common
+
+# Add docker's GPG key
+- name: Setup docker repository key
+  apt_key:
+    id: 0EBFCD88
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  notify: apt-get update
+
+# Determine what version of ubuntu is running
+
+- name: Get release
+  command: lsb_release -c -s
+  register: release
+
+# Here we add docker's repository to allow the system to do an apt-get install of
+# official docker packages.
+- name: Add docker repo
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ release.stdout }} stable
+    state: present
+    filename: docker
+  notify: apt-get update
+
+# Install the docker service.  Fix the name of the package.
+- name: Install the latest version of docker community edition
+  apt:
+    pkg: docker-ce
+    update_cache: yes
+    cache_valid_time: 1800
+~~~~
+
+There is a lot going on here, but the #comments do a good job of explaining. Basically, we are installing docker, using a special key for docker to allow the installation, installing docker packages, and then finally installing the docker service.
+
+* main.yml
+
+~~~~
+---
+# Include a series of tasks for setting up a docker service
+
+- include: install.yml
+- include: user.yml
+- include: service.yml
+~~~~
+
+This main.yml file acts as a listing of what files to include in the docker installation.
+
+
+* service.yml
+~~~~
+---
+# This should ensure that the docker service is running.
+- name: Ensure docker service is started
+  service:
+    name: docker
+    state: reloaded
+~~~~
+This yml file tells ansible to make sure that the docker service is running.
+
+* user.yml
+~~~~
+---
+- name: Adding user to group docker
+  user:
+    name: "{{ 'student_usernamexxxxxxx' }}"
+    group: docker
+    append: yes
+~~~~
+
+This file adds your username to the linux group on the docker container.
+
+Now that we have our tasks set up, we can now add a file to our handlers directory. In this directory we need a main.yml file. In this file we will have:
+~~~~
+---
+# This is the handler that run apt-get update                   
+- name: apt-get update
+  apt:
+    update_cache: yes
+    cache_valid_time: 1800
+~~~~
+
+This handler runs the apt-get update task. Now our Docker role is all set we can setup our fproject role.
+
+### Setting up our Project role
+
+
+
 
 
 ### SSHing Into The Amazon Virtual Machine

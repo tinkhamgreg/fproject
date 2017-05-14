@@ -1,0 +1,5 @@
+---
+# Here we define variables in a key: value setting
+# that will be used in the fproject role.
+fproject_image: gtinkham/fproject
+fproject_command: python3 fproject.py

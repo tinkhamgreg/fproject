@@ -1,0 +1,6 @@
+---
+# This should ensure that the docker service is running.
+- name: Ensure docker service is started
+  service:
+    name: docker
+    state: reloaded
