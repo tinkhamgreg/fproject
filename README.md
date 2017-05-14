@@ -16,8 +16,6 @@ There will be three iterations made to the web application as follows:
 This process flow will allow the end state of the tutorial to show how the staging and development process will work after the tutorial. The staging website will have the home page, metrics page, and two sub pages. The production site will have the home page, metrics page, and just one sub page.
 
 
-###Requirements
-
 
 # Tools We Will Use
 
@@ -39,7 +37,9 @@ We will be using a virtual machine hosted by Amazon Web Services to host our sit
 ## Ansible
 We will utilize Ansible play-books to setup our virtual machine automatically.
 
+## Prometheus
 
+## .yml Files
 
 # Creating Our Home Page (First Run)
 
@@ -508,6 +508,105 @@ Now that we have our tasks set up, we can now add a file to our handlers directo
 This handler runs the apt-get update task. Now our Docker role is all set we can setup our fproject role.
 
 ### Setting up our Project role
+
+Now, in our fproject directory we will create two subdirectories, tasks and vars. Inside of the tasks directory we will just need one main.yml file. Inside of this file will be the contents:
+
+~~~~
+---
+# Install docker python package.
+- name: Ensure python docker-py package is installed
+  pip:
+    name: docker-py
+
+# Starts or restarts the container.
+- name: Start/Restart the container
+  docker_container:
+    name: "fproject-{{ fproject_environment }}"
+    image: "{{ fproject_image }}:{{ fproject_image_version }}"
+    command: "{{ fproject_command }}"
+    state: started
+    ports:
+     - "{{ fproject_host_port }}:{{ fproject_container_port }}"
+
+# This checks that the container that is started.
+- name: verify that webserver is running
+  uri:
+    url: "http://52.53.194.21:{{ fproject_host_port }}"
+    method: GET
+~~~~
+
+In this file we are having ansible install the docker python package, start our docker container, and check that our webserver is running. Now we will need to add a file to the vars directory under fproject. This will be another main.yml file with the contents:
+
+~~~~
+---
+# Here we define variables in a key: value setting
+# that will be used in the fproject role.
+fproject_image: gtinkham/fproject
+fproject_command: python3 fproject.py
+~~~~
+
+In this file we are defining variables that we called in our tasks file. Notice how we use the variables more than once in the tasks file.
+
+We have now successfully added all of the files to ansible that we need. We will now try to test this out in the docker cloud.
+
+We will do this by adding all of our files to the git tree, commiting the files, tagging the commit as 2.0.1, and pushing our tags to github. Be sure to be in the top directory of the project before adding all of the files. When the tests pass successfully, create a pull request, wait for its finish, and then  confirm the pull request and merge into the master branch. We can once again checkout the master branch locally and pull down the newly merged master branch from Github.com.
+
+*Disclaimer!!!
+While we just updated our repository with our ansible documents, we will not be fully testing this functionality until we go and place our docker container on our Amazon Virtual Machine. The next step after implementing the metrics page.
+
+### Implementing The Metrics Page
+
+Implementing the metrics page will require changing a few files that we have already created as well as creating one new file.
+
+First, we will make an addition to our DockerFile. At the end of the file after we tell docker to install Flask, we must tell it to:
+
+`RUN pip3 install prometheus_client`
+
+Now that Docker will install the prometheus_client, we need to create a prometheus_metrics.py file to create a metrics page within Flask. Within this page we will have the contents:
+
+~~~~
+import time
+from flask import request
+from flask import Response
+from prometheus_client import Summary, Counter, Histogram
+from prometheus_client.exposition import generate_latest
+from prometheus_client.core import  CollectorRegistry
+from prometheus_client.multiprocess import MultiProcessCollector
+
+_INF = float("inf")
+# Create a metric to track time spent and requests made.
+REQUEST_TIME = Histogram(
+    'app:request_processing_seconds',
+    'Time spent processing request',
+    ['method', 'endpoint'],
+    buckets=tuple([0.0001, 0.001, .01, .1, 1, _INF])
+)
+REQUEST_COUNTER = Counter(
+    'app:request_count',
+    'Total count of requests',
+    ['method', 'endpoint', 'http_status']
+)
+
+
+def setup_metrics(app):
+    @app.before_request
+    def before_request():
+        request.start_time = time.time()
+
+    @app.after_request
+    def increment_request_count(response):
+        request_latency = time.time() - request.start_time
+        REQUEST_TIME.labels(request.method, request.path
+            ).observe(request_latency)
+
+        REQUEST_COUNTER.labels(request.method, request.path,
+                response.status_code).inc()
+        return response
+
+    @app.route('/metrics')
+    def metrics():
+        return Response(generate_latest(), mimetype="text/plain")
+~~~~
 
 
 
