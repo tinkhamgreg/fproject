@@ -719,7 +719,7 @@ We also need to add another function to render our cloud page inside of the fpro
 ### Putting Our Second Page and Style Changes on AWS
 Now, we should make changes to our ansible deployment playbooks now, so that they are ready to pull the newer image as soon as we update our github repository on the machine.
 
-
+So, now our staging image will be 3.0.3 and the production image will be 3.0.2. We can now add all of our new files to the git tree, commit them, tag them, and push the commits for testing.
 
 
 
