@@ -722,11 +722,33 @@ Now, we should make changes to our ansible deployment playbooks now, so that the
 So, now our staging image will be 3.0.3 and the production image will be 3.0.2. We can now add all of our new files to the git tree, commit them, tag them, and push the commits for testing.
 
 
+After this, we can go to our aws instance again and use:
+
+`git pull origin master`
+
+to pull down our latest commit. We can now run our ansible playbooks again for staging and deployment. These steps are the same as the "Setting up Ansible" section above.
+
+~~~~
+ansible-playbook configure-host.yml -v --extra-vars "student_username=xxxxxxx"
+
+ansible-playbook deploy-website-production.yml -v
+
+ansible-playbook deploy-website-staging.yml -v
+~~~~
 
 
+# Adding Our Third page
+
+Note now that the production environment will just have our basic site, with metrics. The staging site will have our navbar, both of the pages, and the metrics page. At this point it is clear our website could use some more styling. Our navbar is lacking and we still need to add our last page for our navbar. So we can make these changes locally again.
+
+So, we will start by cutting our last branch, subpage2.
+
+Again, we will create a new html file, in this case called best.html. Then we will add this page to the fproject.py file and fproject_test.py file so that Flask will render the page and we can check for its output.
+
+After making those changes we will update our ansible playbooks once again to make changes to which images we will host on our webserver.  These will now reflect:
+
+Production: 3.0.4
+Staging: 3.0.5
 
 
-# Third Run
-sub page
-
-sub page <- staging
+We will then add our new files, commit the changes, tag the commit, and push the tags up to do our last docker cloud test, pull request test, and merge the two branches. Then, we can log back into the AWS instance and deploy our updated webservers. After updating these webservers in production we will see our last staging image and in production we will see our latest revision.

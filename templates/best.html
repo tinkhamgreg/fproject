@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>The Use of The Cloud In Continuous Development</title>
+	<title>Best Practices In Continuous Development</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 </head>
@@ -31,14 +31,15 @@
   </div><!-- /.container-fluid -->
 </nav>
 <body>
-  <h1>The Use of The Cloud In Continuous Development & Deployment</h1>
+  <h1>Best Practices In Continuous Development</h1>
 	<p>
- Utilizing the cloud for continuous development and deployment has a lot
- of benefits over just local work. The first and foremost is the offshoring
- of resources that are needed for things such as docker builds or worrying
- about the upkeep of a system instead of utilizing Amazon Web Services. Secondly,
- the online repository on Github in this instance can give the feel of a central
-  repository for multiple members of a project to from and look at.
+If one researches what the top software companies in the world use for continuous development, they will
+find that every organization has different ways of going about continous development, but that they all have some very
+similar practices. One practice is that these companies such as Instagram and Etsy make updates often. We can see that this is possible
+with the setup we have here. Also, many use a software container system such as Docker. This helps bring down the dependency
+issues within a system. They also all use a few different branches to work on. The reason for a few is so that the work cannot become
+be so much different than the master branch. Also, built within the system are checks so that if something breaks the company can
+know about it fast to reduce downtime.
 	</p>
 </body>
 </html>
