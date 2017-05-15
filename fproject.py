@@ -12,5 +12,9 @@ def run_flask():
 def cloud():
     return render_template('cloud.html')
 
+@app.route('/best')
+def best():
+    return render_template('best.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
