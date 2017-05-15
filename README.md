@@ -13,35 +13,173 @@ There will be three iterations made to the web application as follows:
 * Add a Third Page
 
 
-This process flow will allow the end state of the tutorial to show how the staging and development process will work after the tutorial. The staging website will have the home page, metrics page, and two sub pages. The production site will have the home page, metrics page, and just one sub page.
+This process flow will allow the end state of the tutorial to show how the staging and development process will work after the tutorial. The staging website will have the home page, metrics page, and two sub pages. The production site will have the home page, metrics page, and just one sub page. The first run through will be significantly longer than the rest as we will be establishing all of our different tools inside of the project. This is how we can best simulate a real environment in the end.
+
+
+## Project Final state
+
+Here is a picture of the final state of the directory structure of the project. This can be a good reference when unsure of where to place files.
+You can also see that the directory structure is pretty simple and the project itself is not very complicated. In fact, the website files outnumber the rest of the files used.
+~~~~
+├── ansible
+│   ├── ansible.cfg
+│   ├── configure-host.yml
+│   ├── deploy-website-production.yml
+│   ├── deploy-website-staging.yml
+│   └── roles
+│       ├── docker
+│       │   ├── handlers
+│       │   │   └── main.yml
+│       │   └── tasks
+│       │       ├── install.yml
+│       │       ├── main.yml
+│       │       ├── service.yml
+│       │       └── user.yml
+│       └── fproject
+│           ├── tasks
+│           │   └── main.yml
+│           └── vars
+│               └── main.yml
+├── CHANGELOG.md
+├── docker-compose.test.yml
+├── Dockerfile
+├── fproject.py
+├── fproject_test.py
+├── prometheus_metrics.py
+├── readme_images
+│   └── Continuous Development.jpg
+├── README.md
+├── run_test.sh
+├── static
+│   ├── css
+│   │   ├── bootstrap.css
+│   │   ├── bootstrap.css.map
+│   │   ├── bootstrap.min.css
+│   │   ├── bootstrap.min.css.map
+│   │   ├── bootstrap-theme.css
+│   │   ├── bootstrap-theme.css.map
+│   │   ├── bootstrap-theme.min.css
+│   │   └── bootstrap-theme.min.css.map
+│   ├── fonts
+│   │   ├── glyphicons-halflings-regular.eot
+│   │   ├── glyphicons-halflings-regular.svg
+│   │   ├── glyphicons-halflings-regular.ttf
+│   │   ├── glyphicons-halflings-regular.woff
+│   │   └── glyphicons-halflings-regular.woff2
+│   └── js
+│       ├── bootstrap.js
+│       ├── bootstrap.min.js
+│       └── npm.js
+└── templates
+    ├── best.html
+    ├── cloud.html
+    └── index.html
+
+~~~~
+
+### Git flow
+This is how the project will look through the Github branches. Note this is doctored as the last commit and merge in this branch will contain this very commit used for the final README.md file.
+
+~~~~
+* (Git Commit Yet To Be Made)
+|\
+| * 9495042 (HEAD -> final, tag: 3.0.5, origin/subpage2, subpage2) added  changelog adds
+|  * bb5b151 added third page, updated navbar, more README.md updates
+|  * 9e2f766 (tag: 3.0.4, origin/subpage1, subpage1) fixed assertion error
+|  * 139b351 (tag: 3.0.3) Implemented bootstrap changes and secondary page
+|  *   9c453b6 (origin/master, origin/HEAD, master) Merge pull request #4  from tinkhamgreg/aws
+|\  
+| * 65ed4b1 (tag: 3.0.2, origin/aws) aws testout on first run. Needed to make changes for Prometheus
+| * 73a2976 forgot to switch off master,keeping changes
+|/  
+*   1d14085 Merge pull request #3 from tinkhamgreg/prometheus
+|\  
+| * a4e988d (tag: 3.0.0, origin/prometheus) added prometheus
+|/  
+*   62834fb Merge pull request #2 from tinkhamgreg/ansible
+|\  
+| * 53d7abe (tag: 2.0.1, origin/ansible) Implemented ansible
+|/  
+*   2745d26 Merge pull request #1 from tinkhamgreg/flask
+|\  
+| * 026b9d5 (tag: 1.0.6, origin/flask) readded update
+| * 8ff5732 (tag: 1.0.5) removed upate from dockerfile
+| * ad5249c (tag: 1.0.4) Fixed assertion error
+| * 440a051 (tag: 1.0.3) Had to fix a naming issue in the fproject_test file
+~~~~
+
+If you start from the bottom you can see from the beginning we start on new branches. The stars in the graph are commits. You can see each time we make changes the starts go to the right, where we do our new development, then after they pass tests they join back up to the master branch where the merges become new commits of the master branch.
 
 
 
+# Guide flow
+
+This guide will progressively show less and less of a step by step walk-through towards the end. In the beginning commands such as `cd` or `touch` will be shown but by the end the reader of this guide will develop the ability to know when to use these commands themselves.
 
 
 # Tools We Will Use
 
-## Git
+## Git & Github
 Git will be used for the version control of this project. Git will keep track of all of the changes that are made to the project within the repository.
 
-You will first need to create an account on [www.github.com](www.github.command).
+Git is a version control tool that is completely open source and free. How Git works is by the utilization of repositories. This can be thought of as a master folder that holds all of the contents of a project. In this project fproject will be the name of our repository. We will follow the process of using one master branch, and cutting a branch every time we wish to make new changes to our software. That way, those changes can be tested without affecting the master branch.
 
+You need to create an account on [GitHub](www.github.com).
+
+
+* Why We're Using It
+
+For one, Git is absolutely free, so having no cost involved is a good head start. Also, Git has advantages over other version control software such as being free and by not having one central location for a repository. IF there are 50 people working on a repository and each has their own local copy, then there are 50 copies of the master version. This is great for dealing with issues such as losing old versions. That is the other great thing about git, it keeps a record of every single commit within the repository. So, you can always go back as long as you made a commit.
 
 ## Docker & Docker Cloud
-Docker and Docker Cloud will be used to build images of a container with which we can house our Flask server.
+Docker and Docker Cloud will be used to build images of a container with which we can house our Flask server. Docker is a software container platform that allows developers to place their products within a more controlled environment. This lessens the amount of package and dependency issues that may arise when continually developing software. Docker Cloud is Docker in the cloud, which is used to build images online.
+
+You will need to create a Docker Cloud account [here](cloud.docker.com)
+
+
+* Why We're Using It
+
+Docker has a free version which we are using. It also helps immensely with not having to install a full operating system to deploy our project. We could have a number of small docker images vs a few larger operating systems. In the end, we will use two docker images to deploy both of our websites.
 
 ## Flask
-Flask is a lightweight python based web application that will be used to build our website. In essence, it is a lighter version of Django.
+Flask is a lightweight python based web application that will be used to build our website. In essence, it is a lighter version of Django. A framework like this allows us to get up and running with a website much faster than if we were to do so from scratch. A good way of thinking about it is if we were going to build a car we would not go mine the ores needed to smelt all the metal together. We can use prebuilt pieces of parts to build into our own.
+
+You can checkout Flask [here](http://flask.pocoo.org/)
+
+* Why We're Using It
+
+Because Flask is a lighter version of Django, it will allow us to get up and running even faster. Also, Flask is Python based which is a simpler looking language for beginners. It also allows great scalability.
+
+
 
 ## Amazon Web Services
 We will be using a virtual machine hosted by Amazon Web Services to host our site. Amazon Web Services is a flagship provider in this area and it is worth checking out all of their services. In this project the machine has already been setup beforehand.
 
+You can find out more about Amazon Web Services [here](https://aws.amazon.com/)
+
+* Why We're Using It
+
+AWS is the leader of online web services and is a good place to start when looking into the online hosting environment. This way, much like the other parts of this project, we can focus on the project as a whole instead of getting bogged down into one part too much. Other players in this space are Digital Ocean and linode. They are all pretty similar in what they offer so this is more of a cosmetic choice than a project dependant one.
+
 ## Ansible
-We will utilize Ansible play-books to setup our virtual machine automatically.
+We will utilize Ansible play-books to setup our virtual machine automatically. Ansible is a tool that can be used to setup machines automatically. This is accomplished through the use of playbooks. As the name suggests, playbooks tell ansible what to setup and how. In our case, we will have a few playbooks. One setting up the environment and two deploying each of our websites.
+
+More information on Ansible [here](https://www.ansible.com/)
+
+* Why We're Using It
+
+Ansible offers a way to very quickly spin up our virtual machine and deployment servers. Not only is this faster than manually doing it, if there is an issue we not only can do it faster, we don't have to remember by hand everything that must occur to quickly get things back online. It is all contained within the Ansible playbooks. There are other open source tools like it such as Chef, but Chef has a much steeper learning curve than Ansible. However, Chef is based off of Git, so there are some good things to it.
+
 
 ## Prometheus
+Prometheus is an open source monitoring system. It can be used for a variety of applications and not just websites. It can even provide statistics on Docker. How we will be using Prometheus is to count web page hits and how long it takes to fulfill those hits.
 
-## .yml Files
+The Prometheus website can be found [here](https://prometheus.io/).
+
+* Why We're Using It
+
+Once again, Prometheus is free. Also, it is not a hard application to implement into our project. This gives the developer a quick entry into monitoring and will allow them to possibly see other things that they may wish to monitor.
+
 
 # Creating Our Home Page (First Run)
 
@@ -751,4 +889,4 @@ Production: 3.0.4
 Staging: 3.0.5
 
 
-We will then add our new files, commit the changes, tag the commit, and push the tags up to do our last docker cloud test, pull request test, and merge the two branches. Then, we can log back into the AWS instance and deploy our updated webservers. After updating these webservers in production we will see our last staging image and in production we will see our latest revision.
+We will then add our new files, commit the changes, tag the commit, and push the tags up to do our last docker cloud test, pull request test, and merge the two branches. Then, we can log back into the AWS instance and deploy our updated webservers. After updating these webservers in production we will see our last staging image and in production we will see our latest revision. We now have an environment in which we can continually develop and deploy our webservers.
